@@ -60,11 +60,15 @@ white_space = {new_line} | [ \t\f]
 /* int literals */
 {IntLiteral} { return symbol("Intconst", INTCONST, Long.parseLong(yytext())); }
 
+"return"          { return symbol("return", RETURN);}
+
 /* separators */
 "+"               { return symbol("+",  PLUS); }
 "-"               { return symbol("-",  MINUS); }
+"*"               { return symbol("*",  TIMES); }
 "("               { return symbol("(",  LPAREN); }
 ")"               { return symbol(")",  RPAREN); }
+";"               { return symbol(";", SEMICOLON);}
 
 /* comments */
 "/*" [^*] ~"*/" | "/*" "*"+ "/"

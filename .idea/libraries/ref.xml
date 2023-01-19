@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ref">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/ref/quandary-obfuscated.jar!/" />
+      <root url="jar://$PROJECT_DIR$/ref/java-cup-11b-runtime.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

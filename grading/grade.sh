@@ -9,11 +9,11 @@ do_one_test() {
     echo -n "Testing $OPTIONS $PROGRAM $INPUT, worth $POINTS points: "
     # Compare the last line if process returns nonzero code; otherwise compare last two lines
 
-    # Uncomment to see reference interpreter output only:
-    # echo ""
-    # $REF_IMPL $OPTIONS $TESTCASE_DIR/$PROGRAM $INPUT
-    # echo ""
-    # return
+#     Uncomment to see reference interpreter output only:
+#     echo ""
+#     $REF_IMPL $OPTIONS $TESTCASE_DIR/$PROGRAM $INPUT
+#     echo ""
+#     return
 
     # Get interpreter return and quandary process return (last 2 lines) of ref and sub implementations
     REF_OUT=$($REF_IMPL $OPTIONS $TESTCASE_DIR/$PROGRAM $INPUT 2>&1 | tail -2)
@@ -67,15 +67,16 @@ SUBMISSION_DIR=$(mktemp -d)
 INITIAL_DIR=$(pwd)
 trap "cd $INITIAL_DIR && rm -rf $SUBMISSION_DIR" EXIT
 
-if ! [ -x "$(command -v realpath)" ]; then
+if ! [ -x "$(command -v grealpath)" ]; then
     echo 'Command realpath is not installed. Trying something else, but $2 and $4 need to be relative paths for it to work!'
     REF_IMPL="../$2"
     TESTCASES_FILE="../$3"
     TESTCASE_DIR="../$4"
 else
-    REF_IMPL=$(realpath --relative-to=$SUBMISSION_DIR $2)
-    TESTCASES_FILE=$(realpath --relative-to=$SUBMISSION_DIR $3)
-    TESTCASE_DIR=$(realpath --relative-to=$SUBMISSION_DIR $4)
+  echo "assigning ref impl"
+    REF_IMPL=$(grealpath --relative-to=$SUBMISSION_DIR $2)
+    TESTCASES_FILE=$(grealpath --relative-to=$SUBMISSION_DIR $3)
+    TESTCASE_DIR=$(grealpath --relative-to=$SUBMISSION_DIR $4)
 fi
 TIMEOUT=""
 if [ "$#" -eq 5 ]; then
@@ -95,9 +96,10 @@ if [[ $? -ne 0 ]]; then
     ACTUAL_MAKEFILE=$(find | grep '/Makefile\|/makefile')
     if [[ ! -f $ACTUAL_MAKEFILE ]]; then exit 1; fi
     ACTUAL=$(dirname $ACTUAL_MAKEFILE)
-    REF_IMPL=$(realpath --relative-to=$ACTUAL $REF_IMPL)
-    TESTCASES_FILE=$(realpath --relative-to=$ACTUAL $TESTCASES_FILE)
-    TESTCASE_DIR=$(realpath --relative-to=$ACTUAL $TESTCASE_DIR)
+    echo "assigning ref impl again"
+    REF_IMPL=$(grealpath --relative-to=$ACTUAL $REF_IMPL)
+    TESTCASES_FILE=$(grealpath --relative-to=$ACTUAL $TESTCASES_FILE)
+    TESTCASE_DIR=$(grealpath --relative-to=$ACTUAL $TESTCASE_DIR)
     echo Found $ACTUAL_MAKEFILE, trying to build and execute from $ACTUAL...
     cd $ACTUAL
     make clean
