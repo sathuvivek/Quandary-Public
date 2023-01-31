@@ -27,28 +27,125 @@ parser code {:
 
 :};
 
-terminal PLUS, MINUS, TIMES, UMINUS, LPAREN, RPAREN, RETURN, SEMICOLON;
+terminal PLUS, MINUS, TIMES, UMINUS, LPAREN, RPAREN, RETURN, SEMICOLON, INT, LCURLY, RCURLY, ASSIGN, IF, ELSE, PRINT,
+         GE, LE, GT, LT, EQ, NE, AND, OR, NOT, COMMA, NIL, MUTABLE, DOT, REF, Q, WHILE ;
 terminal Long    INTCONST;
+terminal String IDENT;
 
-non terminal Program         program;
+non terminal Program        program;
+non terminal FuncDefList    funcDefList;
+non terminal FuncDef        funcDef;
+non terminal String         varDecl;
+non terminal                type;
+non terminal FormalDeclList  formalDeclList;
+non terminal FormalDeclList   neFormalDeclList;
+non terminal ExprList       exprList;
+non terminal ExprList       neExprList;
+non terminal Stmt            stmt;
+non terminal StmtList        stmtList;
 non terminal Expr            expr;
 non terminal BinaryExpr      binaryExpr;
+non terminal Cond            cond;
 
+
+precedence left OR;
+precedence left AND;
+precedence left NOT;
+precedence left LE, GE, EQ, NE, LT, GT;
+precedence left DOT;
 precedence left PLUS, MINUS;
 precedence left TIMES;
 precedence left UMINUS;
 
+precedence left ELSE; //resolves dangling else
 start with program;
 
-program ::= RETURN expr:e SEMICOLON
-            {: RESULT = new Program(e, loc(eleft, eright)); :}
-         ;
+program ::= funcDefList:fdl
+            {: RESULT = new Program(fdl, loc(fdlleft, fdlright)); :}
+            ;
+funcDefList ::= funcDef:first funcDefList:rest
+                {: RESULT = new FuncDefList(first, rest, loc(firstleft, firstright)); :}
+            |
+                {: RESULT = null; :}
+            ;
 
-expr ::= INTCONST:c
+funcDef ::= varDecl:funcName LPAREN formalDeclList:params RPAREN LCURLY stmtList:body RCURLY
+                {: RESULT = new FuncDef(funcName, params, body, loc(funcNameleft, funcNameright)); :}
+             ;
+varDecl ::= type IDENT:varName
+            {: RESULT = varName; :}
+            | MUTABLE type IDENT:varName
+                {: RESULT = varName; :}
+            ;
+
+type ::= INT
+        | REF
+        | Q
+        ;
+
+
+formalDeclList ::= neFormalDeclList:list
+                        {: RESULT=list; :}
+                    |
+                        {: RESULT = null; :}
+                    ;
+neFormalDeclList ::= varDecl:first COMMA neFormalDeclList:rest
+                        {: RESULT = new FormalDeclList(first, rest, loc(firstleft,firstright)); :}
+                   | varDecl:first
+                        {: RESULT = new FormalDeclList(first,null, loc(firstleft,firstright)); :}
+                   ;
+
+stmtList ::= stmt:first stmtList:rest
+            {: RESULT = new StmtList(first, rest, loc(firstleft, firstright)); :}
+          |
+            {: RESULT = null; :}
+          ;
+
+
+stmt ::= varDecl:var ASSIGN expr :e SEMICOLON
+            {:  RESULT = new DeclStmt(var, e, loc(varleft, varright)); :}
+      | IDENT:var ASSIGN expr :e SEMICOLON
+                  {:  RESULT = new DeclStmt(var, e, loc(varleft, varright)); :}
+      |  IF LPAREN cond:c RPAREN stmt:s
+            {:  RESULT = new IfStmt(c, s, null, loc(cleft, cright)); :}
+      |  IF LPAREN cond:c RPAREN stmt:thenBody ELSE stmt:elseBody
+            {:  RESULT = new IfStmt(c, thenBody, elseBody, loc(cleft, cright)); :}
+      |  WHILE LPAREN cond:c RPAREN stmt:s
+            {:  RESULT = new WhileStmt(c, s, loc(cleft, cright)); :}
+      | IDENT: funcName LPAREN exprList:args RPAREN SEMICOLON
+            {: RESULT = new CallStmt(funcName, args, loc(funcNameleft, funcNameright)); :}
+      | PRINT expr:e SEMICOLON
+            {:  RESULT = new PrintStmt(e, loc(eleft, eright)); :}
+      | RETURN expr:e SEMICOLON
+            {:  RESULT = new ReturnStmt(e, loc(eleft, eright)); :}
+      | LCURLY stmtList:body RCURLY
+            {:  RESULT = body; :}
+      ;
+
+exprList ::= neExprList:list
+                {: RESULT=list; :}
+              |
+                {: RESULT = null; :}
+              ;
+neExprList ::= expr:first COMMA neExprList:rest
+                        {: RESULT = new ExprList(first, rest, loc(firstleft,firstright)); :}
+                   | expr:first
+                        {: RESULT = new ExprList(first,null, loc(firstleft,firstright)); :}
+                   ;
+expr ::= NIL:n
+         {: RESULT = new NilExpr(loc(nleft, nright)); :}
+      |INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
+      | IDENT: var
+         {: RESULT = new IdentExpr(var, loc(varleft, varright)); :}
       | MINUS expr:e
          {: RESULT = new UnaryMinusExpr(e, loc(eleft, eright)); :}
          %prec UMINUS
+      | LPAREN type RPAREN expr:e
+        {: RESULT = e; :}
+         %prec UMINUS
+      | IDENT:funcName LPAREN exprList:params RPAREN
+         {: RESULT = new CallExpr(funcName, params, loc(funcNameleft, funcNameright)); :}
       |  binaryExpr:e
          {: RESULT = e; :}
       |  LPAREN expr:e RPAREN
@@ -61,4 +158,29 @@ binaryExpr ::= expr:e1 PLUS expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.MINUS, e2, loc(e1left, e1right)); :}
            |  expr:e1 TIMES expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.TIMES, e2, loc(e1left, e1right)); :}
+           |  expr:e1 DOT expr:e2
+                {: RESULT = new BinaryExpr(e1, BinaryExpr.DOT, e2, loc(e1left, e1right)); :}
+
+            ;
+
+cond ::= expr:e1 LE expr:e2
+                {:  RESULT = new CompCond(e1, CompCond.LE, e2, loc(e1left, e1right)); :}
+            | expr:e1 GE expr:e2
+                {:  RESULT = new CompCond(e1, CompCond.GE, e2, loc(e1left, e1right)); :}
+            | expr:e1 LT expr:e2
+                {:  RESULT = new CompCond(e1, CompCond.LT, e2, loc(e1left, e1right)); :}
+            | expr:e1 GT expr:e2
+                {:  RESULT = new CompCond(e1, CompCond.GT, e2, loc(e1left, e1right)); :}
+            | expr:e1 EQ expr:e2
+                {:  RESULT = new CompCond(e1, CompCond.EQ, e2, loc(e1left, e1right)); :}
+            | expr:e1 NE expr:e2
+                {:  RESULT = new CompCond(e1, CompCond.NE, e2, loc(e1left, e1right)); :}
+            | cond:e1 AND cond:e2
+                {:  RESULT = new LogicalCond(e1, LogicalCond.AND, e2, loc(e1left, e1right)); :}
+            | cond:e1 OR cond:e2
+                {:  RESULT = new LogicalCond(e1, LogicalCond.OR, e2, loc(e1left, e1right)); :}
+            | NOT cond:e
+                {:  RESULT = new LogicalCond(e, LogicalCond.NOT, null, loc(eleft, eright)); :}
+            | LPAREN cond:e RPAREN
+                {:  RESULT = e; :}
             ;
