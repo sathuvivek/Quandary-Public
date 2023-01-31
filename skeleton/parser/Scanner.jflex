@@ -60,15 +60,41 @@ white_space = {new_line} | [ \t\f]
 /* int literals */
 {IntLiteral} { return symbol("Intconst", INTCONST, Long.parseLong(yytext())); }
 
-"return"          { return symbol("return", RETURN);}
-
 /* separators */
 "+"               { return symbol("+",  PLUS); }
 "-"               { return symbol("-",  MINUS); }
 "*"               { return symbol("*",  TIMES); }
+"."               { return symbol(".",  DOT); }
 "("               { return symbol("(",  LPAREN); }
 ")"               { return symbol(")",  RPAREN); }
 ";"               { return symbol(";", SEMICOLON);}
+"int"             { return symbol("int", INT);}
+"{"               { return symbol("{", LCURLY);}
+"}"               { return symbol("}", RCURLY);}
+"="               { return symbol("=", ASSIGN);}
+"if"              { return symbol("if", IF);}
+"else"            { return symbol("else", ELSE);}
+"print"           { return symbol("print", PRINT);}
+"mutable"         { return symbol("mutable", MUTABLE);}
+"Ref"             { return symbol("Ref", REF);}
+"while"           { return symbol("while", WHILE);}
+"nil"             { return symbol("nil", NIL);}
+"Q"               { return symbol("Q", Q);}
+"<="              { return symbol("<=",  LE); }
+">="              { return symbol(">=",  GE); }
+"<"               { return symbol("<",  LT); }
+">"               { return symbol(">",  GT); }
+"=="              { return symbol("==",  EQ); }
+"!="              { return symbol("!=", NE);}
+"&&"              { return symbol("&&",  AND); }
+"||"              { return symbol("||",  OR); }
+"!"               { return symbol("!", NOT); }
+"return"          { return symbol("return", RETURN);}
+","               { return symbol(",", COMMA); }
+
+
+
+[_a-zA-Z][_a-zA-Z0-9]*  { return symbol("Identifier", IDENT, yytext()); }
 
 /* comments */
 "/*" [^*] ~"*/" | "/*" "*"+ "/"
