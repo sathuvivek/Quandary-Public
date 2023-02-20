@@ -51,6 +51,8 @@ public class LogicalCond extends Cond {
 
     @Override
     boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
+        cond1.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        cond2.check(environmentFunctions, environmentVariable, isMutable, returnType);
         return false;
     }
 }

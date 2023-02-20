@@ -31,7 +31,7 @@ public class FuncDef extends ASTNode {
 
     @Override
     public String toString() {
-        return varDecl.toString() + " ( " + params.toString() + " ) " + " { \n" + body.toString() + "\n}";
+        return varDecl.toString() + " ( " +  (params == null ? " ": params.toString()) + " ) " + " { \n" + body.toString() + "\n}";
     }
 
     @Override

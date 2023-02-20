@@ -54,10 +54,14 @@ public class CompCond extends Cond {
 
     @Override
     boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
+//        System.out.println("Expr 1 : " + expr1.toString());
+//        System.out.println("Expr 1 type: " + expr1.getClass().getName());
+//        System.out.println("Expr 2 : " + expr2.toString());
+//        System.out.println("Expr 12 type: " + expr2.getClass().getName());
         expr1.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        System.out.println("Class Name : " + expr2.getClass().getName());
+        //System.out.println("Class Name : " + expr2.getClass().getName());
         expr2.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        System.out.println("checked expr2 : " + expr2.getStaticType());
+       // System.out.println("checked expr2 : " + expr2.getStaticType());
         if(expr1.getStaticType() != expr2.getStaticType()) {
             Interpreter.fatalError(" Cannot compare different types of variables at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }

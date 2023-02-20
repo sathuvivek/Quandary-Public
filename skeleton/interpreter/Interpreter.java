@@ -75,7 +75,7 @@ public class Interpreter {
             ex.printStackTrace();
             Interpreter.fatalError("Uncaught parsing error: " + ex, Interpreter.EXIT_PARSING_ERROR);
         }
-        //astRoot.println(System.out);
+     //   astRoot.println(System.out);
         HashMap<String, FuncDef> environmentFunctions = new HashMap<>();
         HashMap<String, VarDecl> environmentVariables = new HashMap<>();
         astRoot.check(environmentFunctions, environmentVariables, false, Type.Q);
