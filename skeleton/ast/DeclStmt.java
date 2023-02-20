@@ -3,16 +3,16 @@ package ast;
 public class DeclStmt extends Stmt {
 
     final Expr expr;
-    final String varName;
+    final VarDecl varDecl;
 
-    public DeclStmt(String varName, Expr expr, Location loc) {
+    public DeclStmt(VarDecl varDecl, Expr expr, Location loc) {
         super(loc);
-        this.varName = varName;
+        this.varDecl = varDecl;
         this.expr = expr;
     }
 
-    public String getVarName() {
-        return varName;
+    public VarDecl getVarDecl() {
+        return varDecl;
     }
     public Expr getExpr() {
         return expr;
@@ -20,6 +20,6 @@ public class DeclStmt extends Stmt {
 
     @Override
     public String toString() {
-        return varName + " " + expr.toString();
+        return varDecl.toString() + " " + expr.toString();
     }
 }

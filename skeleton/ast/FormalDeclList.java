@@ -2,17 +2,17 @@ package ast;
 
 public class FormalDeclList extends ASTNode {
 
-    final String first;
+    final VarDecl varDecl;
     final FormalDeclList rest;
 
-    public FormalDeclList(String first, FormalDeclList rest, Location loc) {
+    public FormalDeclList(VarDecl varDecl, FormalDeclList rest, Location loc) {
         super(loc);
-        this.first = first;
+        this.varDecl = varDecl;
         this.rest = rest;
     }
 
-    public String getFirst() {
-        return first;
+    public VarDecl getVarDecl() {
+        return varDecl;
     }
 
     public FormalDeclList getRest() {
@@ -22,6 +22,6 @@ public class FormalDeclList extends ASTNode {
 
     @Override
     public String toString() {
-        return first + " \n " + rest.toString() ;
+        return varDecl.toString() + " \n " + rest.toString() ;
     }
 }

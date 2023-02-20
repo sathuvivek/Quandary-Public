@@ -1,6 +1,6 @@
 package ast;
 
-public class StmtList extends Stmt {
+public class StmtList extends ASTNode {
 
     final Stmt first;
     final StmtList rest;

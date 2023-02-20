@@ -105,22 +105,27 @@ public class Interpreter {
     QVal executeRoot(Program astRoot, long arg) {
         FuncDef mainFuncDef = astRoot.getFuncDefList().lookupFuncDef("main");
         HashMap<String, QVal> mainEnv = new HashMap<String, QVal>();
-        mainEnv.put(mainFuncDef.getParams().getFirst(), new QInt(arg));
+        mainEnv.put(mainFuncDef.getParams().getVarDecl().getName(), new QInt(arg));
         return execute(mainFuncDef.getBody(), mainEnv);
     }
 
+    QVal execute(StmtList sl, HashMap<String,QVal> env)  {
+        QVal returnValue = execute(sl.getFirst(), env);
+        if( returnValue != null)
+            return returnValue;
+        if(sl.getRest() != null)
+            return execute(sl.getRest(), env);
+        return null;
+    }
+
     QVal execute(Stmt stmt, HashMap<String,QVal> env) {
-        if(stmt instanceof StmtList) {
-            StmtList sl = (StmtList) stmt;
-            QVal returnValue = execute(sl.getFirst(), env);
-            if( returnValue != null)
-                return returnValue;
-            if(sl.getRest() != null)
-                return execute(sl.getRest(), env);
+        if (stmt instanceof AssignStmt ) {
+            AssignStmt assignStmt = (AssignStmt) stmt;
+            env.put(assignStmt.getVarName(), evaluate(assignStmt.getExpr(), env));
             return null;
         } else if (stmt instanceof DeclStmt) {
             DeclStmt declStmt = (DeclStmt) stmt;
-            env.put(declStmt.getVarName(), evaluate(declStmt.getExpr(), env));
+            env.put(declStmt.getVarDecl().getName(), evaluate(declStmt.getExpr(), env));
             return null;
         } else if( stmt instanceof IfStmt) {
             IfStmt ifStmt = (IfStmt)stmt;
@@ -148,6 +153,9 @@ public class Interpreter {
         } else if(stmt instanceof ReturnStmt) {
             ReturnStmt returnStmt = (ReturnStmt) stmt;
             return evaluate(returnStmt.getExpr(), env);
+        } else if(stmt instanceof CompoundStmt) {
+            CompoundStmt compoundStmt = (CompoundStmt) stmt;
+            return execute(compoundStmt.getStmtList(), env);
         } else {
             throw new RuntimeException("Unhandled Smt time");
         }
@@ -166,6 +174,8 @@ public class Interpreter {
             UnaryMinusExpr ume = (UnaryMinusExpr) expr;
             QInt v = (QInt)evaluate(ume.getExpr(), env);
             return new QInt(-v.value);
+        } else if (expr instanceof  CastExpr) {
+            return evaluate(((CastExpr) expr).getExpr(), env);
         } else if(expr instanceof CallExpr) {
            // System.out.println("Got into calling a expression ");
             CallExpr callExpr = (CallExpr)expr;
@@ -208,7 +218,7 @@ public class Interpreter {
            FormalDeclList currentFormalDeclList = callee.getParams();
            ExprList currentExprList = callExpr.getArgs();
            while(currentFormalDeclList != null) {
-               calleeEnv.put(currentFormalDeclList.getFirst(), evaluate(currentExprList.getFirst(),env));
+               calleeEnv.put(currentFormalDeclList.getVarDecl().getName(), evaluate(currentExprList.getFirst(),env));
                currentFormalDeclList = currentFormalDeclList.getRest();
                currentExprList = currentExprList.getRest();
            }

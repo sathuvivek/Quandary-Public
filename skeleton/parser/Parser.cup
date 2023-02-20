@@ -35,8 +35,8 @@ terminal String IDENT;
 non terminal Program        program;
 non terminal FuncDefList    funcDefList;
 non terminal FuncDef        funcDef;
-non terminal String         varDecl;
-non terminal                type;
+non terminal VarDecl         varDecl;
+non terminal Type            type;
 non terminal FormalDeclList  formalDeclList;
 non terminal FormalDeclList   neFormalDeclList;
 non terminal ExprList       exprList;
@@ -72,15 +72,18 @@ funcDefList ::= funcDef:first funcDefList:rest
 funcDef ::= varDecl:funcName LPAREN formalDeclList:params RPAREN LCURLY stmtList:body RCURLY
                 {: RESULT = new FuncDef(funcName, params, body, loc(funcNameleft, funcNameright)); :}
              ;
-varDecl ::= type IDENT:varName
-            {: RESULT = varName; :}
-            | MUTABLE type IDENT:varName
-                {: RESULT = varName; :}
+varDecl ::= type:t IDENT:varName
+            {: RESULT = new VarDecl(t, false, varName, loc(tleft, tright)); :}
+            | MUTABLE type:t IDENT:varName
+                {: RESULT = new VarDecl(t, true, varName, loc(tleft, tright)); :}
             ;
 
 type ::= INT
+            {: RESULT = Type.INT; :}
         | REF
+            {: RESULT = Type.REF; :}
         | Q
+            {: RESULT = Type.Q; :}
         ;
 
 
@@ -105,7 +108,7 @@ stmtList ::= stmt:first stmtList:rest
 stmt ::= varDecl:var ASSIGN expr :e SEMICOLON
             {:  RESULT = new DeclStmt(var, e, loc(varleft, varright)); :}
       | IDENT:var ASSIGN expr :e SEMICOLON
-                  {:  RESULT = new DeclStmt(var, e, loc(varleft, varright)); :}
+                  {:  RESULT = new AssignStmt(var, e, loc(varleft, varright)); :}
       |  IF LPAREN cond:c RPAREN stmt:s
             {:  RESULT = new IfStmt(c, s, null, loc(cleft, cright)); :}
       |  IF LPAREN cond:c RPAREN stmt:thenBody ELSE stmt:elseBody
@@ -119,7 +122,7 @@ stmt ::= varDecl:var ASSIGN expr :e SEMICOLON
       | RETURN expr:e SEMICOLON
             {:  RESULT = new ReturnStmt(e, loc(eleft, eright)); :}
       | LCURLY stmtList:body RCURLY
-            {:  RESULT = body; :}
+            {:  RESULT = new CompoundStmt(body, loc(bodyleft, bodyright)); :}
       ;
 
 exprList ::= neExprList:list
@@ -141,8 +144,8 @@ expr ::= NIL:n
       | MINUS expr:e
          {: RESULT = new UnaryMinusExpr(e, loc(eleft, eright)); :}
          %prec UMINUS
-      | LPAREN type RPAREN expr:e
-        {: RESULT = e; :}
+      | LPAREN type:t RPAREN expr:e
+        {: RESULT = new CastExpr(t,e, loc(tleft, tright)); :}
          %prec UMINUS
       | IDENT:funcName LPAREN exprList:params RPAREN
          {: RESULT = new CallExpr(funcName, params, loc(funcNameleft, funcNameright)); :}
@@ -160,7 +163,6 @@ binaryExpr ::= expr:e1 PLUS expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.TIMES, e2, loc(e1left, e1right)); :}
            |  expr:e1 DOT expr:e2
                 {: RESULT = new BinaryExpr(e1, BinaryExpr.DOT, e2, loc(e1left, e1right)); :}
-
             ;
 
 cond ::= expr:e1 LE expr:e2

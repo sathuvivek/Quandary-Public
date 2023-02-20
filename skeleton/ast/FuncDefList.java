@@ -19,7 +19,7 @@ public class FuncDefList extends ASTNode {
     public FuncDefList getRest() {return rest;}
 
     public FuncDef lookupFuncDef(String name) {
-        if(first.funcName.equals(name))
+        if(first.getVarDecl().getName().equals(name))
             return first;
         return rest.lookupFuncDef(name);
     }

@@ -2,18 +2,18 @@ package ast;
 
 public class FuncDef extends ASTNode {
 
-    final String funcName;
+    final VarDecl varDecl;
     final FormalDeclList params;
     final StmtList body;
-    public FuncDef(String funcName, FormalDeclList params, StmtList body, Location loc) {
+    public FuncDef(VarDecl varDecl, FormalDeclList params, StmtList body, Location loc) {
         super(loc);
-        this.funcName = funcName;
+        this.varDecl = varDecl;
         this.params = params;
         this.body = body;
     }
 
-    public String getFuncName() {
-        return funcName;
+    public VarDecl getVarDecl() {
+        return varDecl;
     }
 
     public FormalDeclList getParams() {
@@ -26,6 +26,6 @@ public class FuncDef extends ASTNode {
 
     @Override
     public String toString() {
-        return funcName + " ( " + params.toString() + " ) " + " { \n" + body.toString() + "\n}";
+        return varDecl.toString() + " ( " + params.toString() + " ) " + " { \n" + body.toString() + "\n}";
     }
 }
