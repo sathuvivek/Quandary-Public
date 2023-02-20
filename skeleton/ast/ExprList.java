@@ -1,6 +1,8 @@
 package ast;
 
-public  class ExprList extends Expr {
+import java.util.HashMap;
+
+public class ExprList extends Expr {
 
     final Expr first;
     final ExprList rest;
@@ -23,5 +25,18 @@ public  class ExprList extends Expr {
     @Override
     public String toString() {
         return first.toString() + " \n " + (rest == null? "End of expressions " : rest.toString()) ;
+    }
+
+    @Override
+    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
+        first.check(environmentFunctions, environmentVariable, isMutable,returnType);
+        if(rest != null)
+            return rest.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        return false;
+    }
+
+    @Override
+    Type getStaticType() {
+        return first.getStaticType();
     }
 }

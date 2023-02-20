@@ -29,7 +29,7 @@ parser code {:
 
 terminal PLUS, MINUS, TIMES, UMINUS, LPAREN, RPAREN, RETURN, SEMICOLON, INT, LCURLY, RCURLY, ASSIGN, IF, ELSE, PRINT,
          GE, LE, GT, LT, EQ, NE, AND, OR, NOT, COMMA, NIL, MUTABLE, DOT, REF, Q, WHILE ;
-terminal Long    INTCONST;
+terminal Long INTCONST;
 terminal String IDENT;
 
 non terminal Program        program;
@@ -51,7 +51,7 @@ non terminal Cond            cond;
 precedence left OR;
 precedence left AND;
 precedence left NOT;
-precedence left LE, GE, EQ, NE, LT, GT;
+precedence nonassoc LE, GE, EQ, NE, LT, GT;
 precedence left DOT;
 precedence left PLUS, MINUS;
 precedence left TIMES;

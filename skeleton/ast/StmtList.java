@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.HashMap;
+
 public class StmtList extends ASTNode {
 
     final Stmt first;
@@ -20,5 +22,17 @@ public class StmtList extends ASTNode {
     @Override
     public String toString() {
         return first.toString() + "\n" + (rest == null? "Empty rest" :  rest.toString());
+    }
+
+
+
+
+    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
+        boolean hasReturn = first.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        if(hasReturn)
+            return hasReturn;
+        if(rest != null)
+            return rest.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        return hasReturn;
     }
 }

@@ -76,6 +76,9 @@ public class Interpreter {
             Interpreter.fatalError("Uncaught parsing error: " + ex, Interpreter.EXIT_PARSING_ERROR);
         }
         //astRoot.println(System.out);
+        HashMap<String, FuncDef> environmentFunctions = new HashMap<>();
+        HashMap<String, VarDecl> environmentVariables = new HashMap<>();
+        astRoot.check(environmentFunctions, environmentVariables, false, Type.Q);
         interpreter = new Interpreter(astRoot);
         interpreter.initMemoryManager(gcType, heapBytes);
         String returnValueAsString = interpreter.executeRoot(astRoot, quandaryArg).toString();
@@ -175,7 +178,15 @@ public class Interpreter {
             QInt v = (QInt)evaluate(ume.getExpr(), env);
             return new QInt(-v.value);
         } else if (expr instanceof  CastExpr) {
-            return evaluate(((CastExpr) expr).getExpr(), env);
+            CastExpr castExpr = (CastExpr) expr;
+            Type t = castExpr.getType();
+            QVal val = evaluate(castExpr.getExpr(), env);
+            if(val instanceof QInt && t != Type.INT) {
+                Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+            } else if (val instanceof QRef && t != Type.REF) {
+                Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+            }
+            return val;
         } else if(expr instanceof CallExpr) {
            // System.out.println("Got into calling a expression ");
             CallExpr callExpr = (CallExpr)expr;
@@ -185,19 +196,43 @@ public class Interpreter {
                 long result = Math.abs(random.nextLong()) % num;
                 return new QInt(result);
             } else if(callExpr.getFuncName().equals("left")) {
+                Expr expr1 = callExpr.getArgs().getFirst();
+                if(expr1 == null)
+                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
+                if(r.referent == null)
+                    Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
+
                 return r.referent.left;
             } else if (callExpr.getFuncName().equals("right")) {
+                Expr expr1 = callExpr.getArgs().getFirst();
+                if(expr1 == null)
+                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
+                if(r.referent == null)
+                    Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
+
                 return r.referent.right;
             } else if (callExpr.getFuncName().equals("setLeft")) {
+                Expr expr1 = callExpr.getArgs().getFirst();
+                if(expr1 == null)
+                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 QVal val = evaluate(callExpr.getArgs().getRest().getFirst(), env);
+                if(r.referent == null)
+                    Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
+
                 r.referent.left = val;
                 return new QInt(1);
             } else if (callExpr.getFuncName().equals("setRight")) {
+                Expr expr1 = callExpr.getArgs().getFirst();
+                if(expr1 == null)
+                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 QVal val = evaluate(callExpr.getArgs().getRest().getFirst(), env);
+                if(r.referent == null)
+                    Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
+
                 r.referent.right = val;
                 return new QInt(1);
             } else if (callExpr.getFuncName().equals("isAtom")) {

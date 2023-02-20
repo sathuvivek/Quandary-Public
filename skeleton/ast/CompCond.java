@@ -1,5 +1,10 @@
 package ast;
 
+import interpreter.Interpreter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class CompCond extends Cond {
 
     public static final int GE = 1;
@@ -45,5 +50,17 @@ public class CompCond extends Cond {
             case NE: s = "!="; break;
         }
         return "(" + expr1 + " " + s + " " + expr2 + ")";
+    }
+
+    @Override
+    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
+        expr1.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        System.out.println("Class Name : " + expr2.getClass().getName());
+        expr2.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        System.out.println("checked expr2 : " + expr2.getStaticType());
+        if(expr1.getStaticType() != expr2.getStaticType()) {
+            Interpreter.fatalError(" Cannot compare different types of variables at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
+        }
+        return false;
     }
 }

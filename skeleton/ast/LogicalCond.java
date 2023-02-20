@@ -1,5 +1,9 @@
 package ast;
 
+import interpreter.Interpreter;
+
+import java.util.HashMap;
+
 public class LogicalCond extends Cond {
 
     public static final int AND = 1;
@@ -43,5 +47,10 @@ public class LogicalCond extends Cond {
             return  s + cond1;
         else
             return "(" + cond1 + " " + s + " " + cond2 + ")";
+    }
+
+    @Override
+    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
+        return false;
     }
 }

@@ -1,13 +1,16 @@
 mutable int main(int arg) {
-   return foo(arg);
+second();
+
+   return 10;
 }
 
-mutable int foo(mutable Q x) {
-    x = 1.nil;
-    setRight((Ref)x,x);
-    print(x);
-    x = 42;
-    x = nil;
-    return 0;
+mutable int second() {
+int a = 5;
+if( a != null ||  a != a) {
+       return 6;
 }
+return a;
+}
+
+
 
