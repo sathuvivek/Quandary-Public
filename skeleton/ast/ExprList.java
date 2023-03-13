@@ -28,15 +28,14 @@ public class ExprList extends Expr {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        first.check(environmentFunctions, environmentVariable, isMutable,returnType);
+    public void check(Context c) {
+        first.check(c);
         if(rest != null)
-            return rest.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        return false;
+            rest.check(c);
     }
 
     @Override
-    Type getStaticType() {
-        return first.getStaticType();
+    Type getStaticType(Context c) {
+        return first.getStaticType(c);
     }
 }

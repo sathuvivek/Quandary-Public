@@ -23,41 +23,28 @@ public class Program extends ASTNode {
     public void println(PrintStream ps) {
         ps.println(funcDefList);
     }
-
     @Override
-    public boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        environmentFunctions = getFunctionMap();
-        //System.out.println("Precalculated functions : " + environmentFunctions.keySet().toString());
-        if(!environmentFunctions.containsKey("main") || environmentFunctions.get("main").getParams().getVarDecl().getType() != Type.INT) {
-            Interpreter.fatalError("Code has no valid main function at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
+    public void check(Context c) {
+        //Add funcDefs to map
+        FuncDefList  curList = funcDefList;
+        while(curList != null) {
+            FuncDef funcDef = curList.getFirst();
+            if(c.funcMap.containsKey(funcDef.varDecl.getName()) ||
+                CallExpr.getBuiltinFunc(funcDef.getVarDecl().getName()) != null) {
+                Interpreter.fatalError("duplicate function : " + funcDef.getVarDecl().getName() , Interpreter.EXIT_STATIC_CHECKING_ERROR);
+            }
+            c.funcMap.put(funcDef.varDecl.getName(), funcDef);
+            curList = curList.getRest();
         }
-        return funcDefList.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        //Check that main exists
+        FuncDef funcDef = c.funcMap.get("main");
+        if(!(funcDef != null &&
+                funcDef.getParams().getVarDecl().type == Type.INT  &&
+                funcDef.getParams().getRest() == null)) {
+            Interpreter.fatalError("main", Interpreter.EXIT_STATIC_CHECKING_ERROR );
+        }
+        //Check all function definitions
+        funcDefList.check(c);
     }
 
-    private HashMap<String, FuncDef> getFunctionMap() {
-        HashMap<String, FuncDef> environmentFunctions = new HashMap<>();
-        FuncDefList dup = funcDefList;
-        ArrayList<String> list = new ArrayList<>();
-        list.add("left");
-        list.add("right");
-        list.add("isAtom");
-        list.add("isNil");
-        list.add("setLeft");
-        list.add("setRight");
-        list.add("acq");
-        list.add("rel");
-
-        while(dup != null) {
-            String funcName = dup.getFirst().getVarDecl().getName();
-            if(list.contains(funcName)) {
-                Interpreter.fatalError(  "Function name cant be same as in build function at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            }
-            if(environmentFunctions.containsKey(funcName)) {
-                Interpreter.fatalError(  "Duplicate function declaration : " + funcName + " at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            }
-            environmentFunctions.put(funcName, dup.getFirst());
-            dup = dup.getRest();
-        }
-        return environmentFunctions;
-    }
 }

@@ -31,27 +31,16 @@ public class AssignStmt extends Stmt {
         return varName + " " + expr.toString();
     }
 
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        if(!environmentVariable.containsKey(varName)) {
-            Interpreter.fatalError(varName + " not defined at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            return false;
+    @Override
+    public void check(Context c) {
+        expr.check(c);
+        if(!c.varMap.containsKey(varName)) {
+            Interpreter.fatalError("var udnefined", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
-        VarDecl decl = environmentVariable.get(varName);
-        if(!decl.getIsMutable()) {
-            Interpreter.fatalError(varName + " is not mutable at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            return false;
+        VarDecl vd = c.varMap.get(varName);
+        Context.checkTypes(expr.getStaticType(c), vd.getType());
+        if(!vd.getIsMutable()) {
+            Interpreter.fatalError("immutable variable write", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
-        boolean hasReturn = expr.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        //if( !(expr.getStaticType() == Type.Q  || expr.getStaticType() == decl.getType())) {
-       // System.out.println("Left : " + decl.getType() + " | right : " + expr.getStaticType());
-        boolean hasQLeft = (decl.getType() == Type.Q );
-        boolean hasSameType = (expr.getStaticType() == decl.getType());
-        boolean val = (hasQLeft || hasSameType);
-        //System.out.println("qLeft  : " +hasQLeft + "  | hasSameTye : " + hasSameType + " | Output : " + (!val)) ;
-        if( !val) {
-                Interpreter.fatalError(  "Assignment Typecast error at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-                return false;
-        }
-        return hasReturn;
     }
 }

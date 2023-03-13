@@ -1,5 +1,7 @@
 package ast;
 
+import interpreter.Interpreter;
+
 import java.util.HashMap;
 
 public class UnaryMinusExpr extends Expr {
@@ -21,13 +23,15 @@ public class UnaryMinusExpr extends Expr {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        expr.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        return false;
-    }
+    public void check(Context c) {
+        expr.check(c);
+        if(expr.getStaticType(c) != Type.INT) {
+            Interpreter.fatalError("Unary Minus wrong expression type", Interpreter.EXIT_STATIC_CHECKING_ERROR);
+        }
 
+    }
     @Override
-    Type getStaticType() {
+    Type getStaticType(Context c) {
         return Type.INT;
     }
 }

@@ -25,16 +25,14 @@ public class IdentExpr extends Expr {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        if(!environmentVariable.containsKey(varName)) {
-            Interpreter.fatalError(varName + " variable not defined at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
+    public void check(Context c) {
+        if(!c.varMap.containsKey(varName)) {
+            Interpreter.fatalError("Undeclared var", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
-        staticType = environmentVariable.get(varName).getType();
-        return false;
     }
 
     @Override
-    Type getStaticType() {
-        return staticType;
+    Type getStaticType(Context c) {
+        return c.varMap.get(varName).getType();
     }
 }

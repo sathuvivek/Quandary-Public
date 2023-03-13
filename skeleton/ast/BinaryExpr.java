@@ -49,27 +49,19 @@ public class BinaryExpr extends Expr {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-
-        expr1.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        expr2.check(environmentFunctions, environmentVariable, isMutable, returnType);
+    public void check(Context c) {
+        expr1.check(c);
+        expr2.check(c);
         if(operator != DOT) {
-            Type[] caster = {Type.Q, Type.INT};
-            List<Type> castList = Arrays.asList(caster);
-            if(expr1.getStaticType() != Type.INT || expr2.getStaticType() != Type.INT) {
-                Interpreter.fatalError(" Cannot do binary operations on non INT at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-                return false;
+            if(expr1.getStaticType(c) != Type.INT ||
+                expr2.getStaticType(c) != Type.INT) {
+                Interpreter.fatalError("binary expression types not int", Interpreter.EXIT_STATIC_CHECKING_ERROR);
             }
-//            if(!castList.contains(expr1.getStaticType()) || !castList.contains(expr2.getStaticType())) {
-//                Interpreter.fatalError(" Cannot do binary operations on non INT at " + loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-//                return false;
-//            }
         }
-        return false;
     }
 
     @Override
-    Type getStaticType() {
+    Type getStaticType(Context c) {
         if(operator != DOT) {
            return Type.INT;
         }

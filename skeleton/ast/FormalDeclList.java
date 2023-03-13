@@ -1,5 +1,7 @@
 package ast;
 
+import interpreter.Interpreter;
+
 import java.util.HashMap;
 
 public class FormalDeclList extends ASTNode {
@@ -28,10 +30,13 @@ public class FormalDeclList extends ASTNode {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        varDecl.check(environmentFunctions, environmentVariable, isMutable, returnType);
+    public void check(Context c) {
+        if(c.varMap.containsKey(varDecl.getName())) {
+            Interpreter.fatalError("Variable already defined" , Interpreter.EXIT_STATIC_CHECKING_ERROR);
+        }
+        c.varMap.put(varDecl.getName(),varDecl);
+       // varDecl.check(c);
         if(rest != null)
-            return rest.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        return false;
+            rest.check(c);
     }
 }

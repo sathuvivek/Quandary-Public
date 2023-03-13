@@ -33,17 +33,10 @@ public class IfStmt extends Stmt {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        cond.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        boolean thenReturn = false;
-        boolean elseReturn = false;
-        thenReturn = thenStmt.check(environmentFunctions, (HashMap<String, VarDecl>) environmentVariable.clone(), isMutable, returnType);
-       // System.out.println("checked then statement with output : " + thenReturn + "for stmt : " + this.toString()) ;
-        if(elseStmt != null) {
-            elseReturn = elseStmt.check(environmentFunctions, (HashMap<String, VarDecl>) environmentVariable.clone(), isMutable, returnType);
-           // System.out.println("checked else statement with output : " + elseReturn);
-            return thenReturn && elseReturn;
-        }
-        return false;
+    public  void check(Context c) {
+        cond.check(c);
+        thenStmt.check(c.duplicate());
+        if(elseStmt != null)
+            elseStmt.check(c.duplicate());
     }
 }

@@ -29,25 +29,16 @@ public class CastExpr extends Expr {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-
-        expr.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        Type expressionType = expr.getStaticType();
-        Type[] downCast = {Type.Q, type};
-        List<Type> downCastList = Arrays.asList(downCast);
-        Type[] upCast = {Type.Q, expressionType};
-        List<Type> upCastList = Arrays.asList(upCast);
-
-       // System.out.println("");
-        if( !(downCastList.contains(expressionType) || upCastList.contains(type))) {
-            Interpreter.fatalError( "Illegal Cast operation at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            return false;
+    public void check(Context c) {
+        expr.check(c);
+        if(type == Type.INT && expr.getStaticType(c) == Type.REF ||
+                type == Type.REF && expr.getStaticType(c) == Type.INT) {
+            Interpreter.fatalError("Cast Expr error", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
-        return false;
     }
 
     @Override
-    Type getStaticType() {
+    Type getStaticType(Context c) {
         return type;
     }
 }

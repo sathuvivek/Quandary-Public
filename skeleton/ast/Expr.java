@@ -6,5 +6,5 @@ public abstract class Expr extends ASTNode {
         super(loc);
     }
 
-    abstract Type getStaticType();
+    abstract Type getStaticType(Context c);
 }

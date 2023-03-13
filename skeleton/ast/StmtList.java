@@ -24,15 +24,10 @@ public class StmtList extends ASTNode {
         return first.toString() + "\n" + (rest == null? "Empty rest" :  rest.toString());
     }
 
-
-
-
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        boolean hasReturn = first.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        if(hasReturn)
-            return hasReturn;
+    @Override
+    public void check(Context c) {
+        first.check(c);
         if(rest != null)
-            return rest.check(environmentFunctions, environmentVariable, isMutable, returnType);
-        return hasReturn;
+            rest.check(c);
     }
 }

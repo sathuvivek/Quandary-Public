@@ -23,15 +23,12 @@ public class ConstExpr extends Expr {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-       // System.out.println("Value : " + value + " | class : " + value.getClass().getName());
-        if(value == null)
-            Interpreter.fatalError( "null is not defined"+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-        return false;
+    public void check(Context c) {
+
     }
 
     @Override
-    Type getStaticType() {
+    Type getStaticType(Context c) {
         return Type.INT;
     }
 }

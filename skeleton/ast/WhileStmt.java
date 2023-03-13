@@ -28,8 +28,8 @@ public class WhileStmt extends Stmt {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        cond.check(environmentFunctions, environmentVariable,isMutable, returnType);
-        return body.check(environmentFunctions, environmentVariable, isMutable, returnType);
+    public  void check(Context c) {
+        cond.check(c);
+        body.check(c.duplicate());
     }
 }

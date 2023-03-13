@@ -23,41 +23,14 @@ public class CallStmt extends Stmt {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        String funcName = callExpr.getFuncName();
-        //System.out.println("callStmt  ");
-        ArrayList<String> builtInList = new ArrayList<>();
-        builtInList.add("left");
-        builtInList.add("right");
-        builtInList.add("isAtom");
-        builtInList.add("isNil");
-        builtInList.add("setLeft");
-        builtInList.add("setRight");
-        builtInList.add("acq");
-        builtInList.add("rel");
-        builtInList.add("randomInt");
-
-        if(!builtInList.contains(funcName)) {
-            if (!environmentFunctions.containsKey(funcName)) {
-                Interpreter.fatalError(funcName + " function is not defined at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            }
-            boolean isCalleeMutable = environmentFunctions.get(funcName).getVarDecl().getIsMutable();
-            if (!isCalleeMutable) {
-                Interpreter.fatalError("Cannot call immutable function at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-            }
-        } else {
-            if (!isMutable) {
-                ArrayList<String> mutableList = new ArrayList<>();
-                mutableList.add("acq");
-                mutableList.add("rel");
-                mutableList.add("setLeft");
-                mutableList.add("setRight");
-                if(mutableList.contains(funcName)) {
-                    Interpreter.fatalError(" Cannot call mutable from immutable "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-                }
-            }
+    public void check(Context c) {
+        callExpr.check(c);
+        FuncDef callee = c.funcMap.get(callExpr.getFuncName());
+        if(callee == null) {
+            callee = callExpr.getBuiltinFunc(callExpr.getFuncName());
         }
-
-        return callExpr.check(environmentFunctions, environmentVariable, isMutable, returnType);
+        if(!callee.getVarDecl().getIsMutable()) {
+            Interpreter.fatalError("Function is not mutable caller : " + c.containingFuncDef.getVarDecl().getName() + " | callee : " + callExpr.getFuncName(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
+        }
     }
 }

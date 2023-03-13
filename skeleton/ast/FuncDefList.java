@@ -34,14 +34,10 @@ public class FuncDefList extends ASTNode {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        var hasReturn = first.check(environmentFunctions, (HashMap<String, VarDecl>) environmentVariable.clone(), first.varDecl.getIsMutable(), returnType);
-        if(!hasReturn) {
-            Interpreter.fatalError(first.getVarDecl().getName() + " has no return at "+ loc.toString(), Interpreter.EXIT_STATIC_CHECKING_ERROR);
-        }
+    public void check(Context c) {
+        first.check(c.duplicate(first));
         if(rest != null)
-            rest.check(environmentFunctions, environmentVariable, isMutable,returnType);
-        return false;
+            rest.check(c);
     }
 
 

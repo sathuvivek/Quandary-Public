@@ -21,7 +21,7 @@ public class CompoundStmt extends Stmt {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        return stmtList.check(environmentFunctions, (HashMap<String, VarDecl>) environmentVariable.clone(), isMutable, returnType);
+    public void check(Context c) {
+        stmtList.check(c.duplicate());
     }
 }

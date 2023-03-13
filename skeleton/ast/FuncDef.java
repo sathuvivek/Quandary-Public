@@ -33,17 +33,19 @@ public class FuncDef extends ASTNode {
     public String toString() {
         return varDecl.toString() + " ( " +  (params == null ? " ": params.toString()) + " ) " + " { \n" + body.toString() + "\n}";
     }
-
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        varDecl.check(environmentFunctions, (HashMap<String, VarDecl>) environmentVariable.clone(), isMutable, returnType);
-        //System.out.println("Actual Variables : " + environmentVariable.keySet().toString());
-        HashMap<String, VarDecl> clonedVariables = (HashMap<String, VarDecl>) environmentVariable.clone();
-        //System.out.println("ClonedVariables before Param check : " + clonedVariables.keySet().toString());
+    public void check(Context c) {
+       // varDecl.check(c);
         if(params != null)
-            params.check(environmentFunctions,clonedVariables, isMutable, returnType);
-        //environmentFunctions.put(varDecl.getName(), this);
-        //System.out.println("ClonedVariables sending to within Function : " + clonedVariables.keySet().toString());
-        return body.check(environmentFunctions, clonedVariables, varDecl.getIsMutable(), varDecl.getType());
+            params.check(c);
+        StmtList currStmtList = body;
+        while(currStmtList != null && currStmtList.rest != null) {
+            currStmtList = currStmtList.rest;
+        }
+        if(currStmtList == null || !(currStmtList.getFirst() instanceof  ReturnStmt)) {
+            Interpreter.fatalError("Last stmt was not return", Interpreter.EXIT_STATIC_CHECKING_ERROR);
+        }
+        body.check(c);
     }
+
 }

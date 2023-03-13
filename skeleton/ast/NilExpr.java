@@ -3,10 +3,8 @@ package ast;
 import java.util.HashMap;
 
 public class NilExpr extends Expr {
-
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable,boolean isMutable, Type returnType) {
-        return false;
+    public void check(Context c) {
     }
 
     public NilExpr(Location loc) {
@@ -14,7 +12,7 @@ public class NilExpr extends Expr {
     }
 
     @Override
-    Type getStaticType() {
+    Type getStaticType(Context c) {
         return Type.REF;
     }
 }

@@ -1,5 +1,7 @@
 package ast;
 
+import interpreter.Interpreter;
+
 import java.util.HashMap;
 
 public class PrintStmt extends Stmt {
@@ -21,7 +23,7 @@ public class PrintStmt extends Stmt {
     }
 
     @Override
-    boolean check(HashMap<String, FuncDef> environmentFunctions, HashMap<String, VarDecl> environmentVariable, boolean isMutable, Type returnType) {
-        return expr.check(environmentFunctions, environmentVariable, isMutable, returnType);
+    public void check(Context c) {
+        expr.check(c);
     }
 }
