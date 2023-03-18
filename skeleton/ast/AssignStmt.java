@@ -38,7 +38,7 @@ public class AssignStmt extends Stmt {
             Interpreter.fatalError("var udnefined", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
         VarDecl vd = c.varMap.get(varName);
-        Context.checkTypes(expr.getStaticType(c), vd.getType());
+        Context.checkTypes(expr.getStaticType(c), vd.getType(), loc);
         if(!vd.getIsMutable()) {
             Interpreter.fatalError("immutable variable write", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }

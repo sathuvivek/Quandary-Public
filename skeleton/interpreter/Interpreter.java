@@ -2,10 +2,18 @@ package interpreter;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.WeakHashMap;
 import java.util.Random;
 
 import parser.ParserWrapper;
 import ast.*;
+import parser.ParserWrapper;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.*;
 
 public class Interpreter {
 
@@ -21,6 +29,9 @@ public class Interpreter {
 
     static private Interpreter interpreter;
 
+    static private WeakHashMap<String, WeakHashMap> mapper = new WeakHashMap<>();
+    //static private WeakHashMap<List<QVal>, QVal> memoizer = new WeakHashMap<>();
+    static private boolean hasMemoization;
     public static Interpreter getInterpreter() {
         return interpreter;
     }
@@ -32,14 +43,24 @@ public class Interpreter {
         String filename;
         long quandaryArg;
         try {
+           // System.out.println("args.length : " + args.length);
             for (; i < args.length; i++) {
                 String arg = args[i];
+//                System.out.println("Arg is " + arg);
+//                System.out.println("i val is " + i);
                 if (arg.startsWith("-")) {
                     if (arg.equals("-gc")) {
                         gcType = args[i + 1];
                         i++;
                     } else if (arg.equals("-heapsize")) {
                         heapBytes = Long.valueOf(args[i + 1]);
+                        i++;
+                    } else if (arg.equals("-et")) {
+                        IsExtended.setValue(true);
+                    } else if (arg.equals("-memoize")) {
+                       // memoizeName = args[i + 1];
+                        hasMemoization = true;
+                        mapper.put(args[i + 1], new WeakHashMap<CustomArrayList<QVal>, QVal>());
                         i++;
                     } else {
                         throw new RuntimeException("Unexpected option " + arg);
@@ -59,6 +80,7 @@ public class Interpreter {
             System.out.println("  -gc (MarkSweep|Explicit|NoGC)");
             System.out.println("  -heapsize BYTES");
             System.out.println("BYTES must be a multiple of the word size (8)");
+            System.out.println(ex);
             return;
         }
 
@@ -164,7 +186,10 @@ public class Interpreter {
 
     QVal evaluate(Expr expr, HashMap<String,QVal> env) {
         if (expr instanceof NilExpr) {
-            return new QRef(null);
+            if(IsExtended.getValue())
+                return new QList(null);
+            else
+                return new QRef(null);
         } else if (expr instanceof ConstExpr) {
             return new QInt((long)((ConstExpr) expr).getValue());
         } else if(expr instanceof IdentExpr) {
@@ -178,7 +203,23 @@ public class Interpreter {
             QVal value = evaluate(castExpr.getExpr(), env);
             if(castExpr.getType() == Type.REF && ! (value instanceof QRef) ||
                 castExpr.getType() == Type.INT && ! (value instanceof QInt))   {
-                Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+                Interpreter.fatalError("Failed dynamic typecast traditional", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+            }
+            if(IsExtended.getValue()) {
+               // System.out.println("Extended : trying to cast castExpr : " + castExpr.getType() + " | value : " + value.getClass().getName());
+//                if(castExpr.getType() == Type.NONEMPTYLIST) {
+//                    System.out.println("is List " + (value instanceof QList));
+//                    System.out.println("what does it have? : " + value.toString());
+//                    System.out.println("Is it empty : " + !((QList)value).isNonEmpty);
+//                    //System.out.println("castExpr.getType() == Type.NONEMPTYLIST && !(value instanceof QList) && !((QList)value).getIsNonEmpty() : " +  (castExpr.getType() == Type.NONEMPTYLIST && !(value instanceof QList) && !((QList)value).getIsNonEmpty()));
+//                }
+                if(((castExpr.getType() == Type.LIST) && !(value instanceof QList)) ||
+                        (castExpr.getType() == Type.NONNILREF && !(value instanceof QRef)) ||
+                        (castExpr.getType() == Type.NONEMPTYLIST && (!(value instanceof QList) || !((QList)value).getIsNonEmpty()))
+                )
+                {
+                    Interpreter.fatalError("Failed dynamic typecast for extended : castExpr : " + castExpr.getType() + " | value : " + value.getClass().getName(), Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+                }
             }
             return value;
         } else if(expr instanceof CallExpr) {
@@ -190,32 +231,20 @@ public class Interpreter {
                 long result = Math.abs(random.nextLong()) % num;
                 return new QInt(result);
             } else if(callExpr.getFuncName().equals("left")) {
-//                Expr expr1 = callExpr.getArgs().getFirst();
-//                if(expr1 == null)
-//                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 checkRef(r);
                 return r.referent.left;
             } else if (callExpr.getFuncName().equals("right")) {
-//                Expr expr1 = callExpr.getArgs().getFirst();
-//                if(expr1 == null)
-//                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 checkRef(r);
                 return r.referent.right;
             } else if (callExpr.getFuncName().equals("setLeft")) {
-//                Expr expr1 = callExpr.getArgs().getFirst();
-//                if(expr1 == null)
-//                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 QVal val = evaluate(callExpr.getArgs().getRest().getFirst(), env);
                 checkRef(r);
                 r.referent.left = val;
                 return new QInt(1);
             } else if (callExpr.getFuncName().equals("setRight")) {
-//                Expr expr1 = callExpr.getArgs().getFirst();
-//                if(expr1 == null)
-//                    Interpreter.fatalError("Failed dynamic typecast", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 QVal val = evaluate(callExpr.getArgs().getRest().getFirst(), env);
                 checkRef(r);
@@ -234,23 +263,74 @@ public class Interpreter {
                 }
                 return new QInt(0);
             }
+
+            if(IsExtended.getValue()) {
+                if( callExpr.getFuncName().equals("first")) {
+                    QList r = (QList) evaluate(callExpr.getArgs().getFirst(), env);
+                    if(!r.isNonNil()) {
+                        Interpreter.fatalError("Failed dynamic typecast extended", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+                    }
+                    //checkRef(r);
+                    return r.referent.left;
+                } else if(callExpr.getFuncName().equals("rest")) {
+                    QList r = (QList) evaluate(callExpr.getArgs().getFirst(), env);
+                    if(!r.isNonNil()) {
+                        Interpreter.fatalError("Failed dynamic typecast extended", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
+                    }
+                    return r.referent.right;
+                }
+            }
            FuncDef callee =  astRoot.getFuncDefList().lookupFuncDef(callExpr.getFuncName());
            HashMap<String, QVal> calleeEnv = new HashMap<String, QVal>();
            FormalDeclList currentFormalDeclList = callee.getParams();
            ExprList currentExprList = callExpr.getArgs();
+           CustomArrayList<QVal> argumentList = new CustomArrayList<>();
            while(currentFormalDeclList != null) {
-               calleeEnv.put(currentFormalDeclList.getVarDecl().getName(), evaluate(currentExprList.getFirst(),env));
+               QVal exprVal = evaluate(currentExprList.getFirst(),env);
+               argumentList.add(exprVal);
+               calleeEnv.put(currentFormalDeclList.getVarDecl().getName(), exprVal);
                currentFormalDeclList = currentFormalDeclList.getRest();
                currentExprList = currentExprList.getRest();
            }
-           return execute(callee.getBody(), calleeEnv);
+           String funcName = callExpr.getFuncName();
+           if(hasMemoization && mapper.containsKey(funcName)) {
+             //  System.out.println("Called func : " + callExpr.getFuncName());
+               WeakHashMap<CustomArrayList<QVal>, QVal> memTable = mapper.get(funcName);
+             //  System.out.println("Has resultant memtable : " + memTable.toString());
+              // System.out.println("argument sent : " + argumentList.toString());
+           //    System.out.println("computing hashcode : "  );
+//               int hashCode = argumentList.hashCode();
+//               System.out.println(" hashcode : " + hashCode );
+               QVal cachedResult = memTable.get(argumentList);
+               if (cachedResult != null) {
+                //   System.out.println("Got cached result:  " + cachedResult.toString()  ); //+ cachedResult
+                   return cachedResult;
+               } else
+                   System.out.println("No cache results ");
+           }
+           QVal output =  execute(callee.getBody(), calleeEnv);
+           if(hasMemoization && mapper.containsKey(funcName)) {
+               WeakHashMap<CustomArrayList<QVal>, QVal> memTable = mapper.get(funcName);
+               memTable.put(argumentList, output);
+               mapper.put(funcName, memTable);
+           //    System.out.println("Storing value  : "  + output.toString() ); //" | " + output.toString()
+              // System.out.println("New MemTable " + memTable.toString());
+           }
+
+           return output;
         } else if (expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr)expr;
             switch (binaryExpr.getOperator()) {
                 case BinaryExpr.PLUS: return new QInt(((QInt)evaluate(binaryExpr.getLeftExpr(), env)).value + ((QInt)evaluate(binaryExpr.getRightExpr(), env)).value);
                 case BinaryExpr.MINUS: return new QInt(((QInt)evaluate(binaryExpr.getLeftExpr(), env)).value - ((QInt)evaluate(binaryExpr.getRightExpr(), env)).value);
                 case BinaryExpr.TIMES: return new QInt(((QInt)evaluate(binaryExpr.getLeftExpr(), env)).value * ((QInt)evaluate(binaryExpr.getRightExpr(), env)).value);
-                case BinaryExpr.DOT: return new QRef(new QObj(evaluate(binaryExpr.getLeftExpr(), env), evaluate(binaryExpr.getRightExpr(), env)));
+                case BinaryExpr.DOT:
+                    QVal left = evaluate(binaryExpr.getLeftExpr(), env);
+                    QVal right = evaluate(binaryExpr.getRightExpr(), env);
+                    if(right instanceof QList) {
+                        return new QList( new QObj(left, right));
+                    } else
+                        return new QRef(new QObj(left, right));
                 default: throw new RuntimeException("Unhandled operator");
             }
         }
@@ -270,7 +350,7 @@ public class Interpreter {
     }
 
     void checkRef(QRef value) {
-        if(value.referent == null) {
+        if(value.referent == null && !IsExtended.getValue()) {
             Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
         }
     }

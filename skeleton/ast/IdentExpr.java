@@ -32,6 +32,13 @@ public class IdentExpr extends Expr {
     }
 
     @Override
+    boolean isList(Context c) {
+        if(IsExtended.getValue() && (c.varMap.get(varName).getType() == Type.LIST || c.varMap.get(varName).getType() == Type.NONEMPTYLIST))
+            return true;
+        return false;
+    }
+
+    @Override
     Type getStaticType(Context c) {
         return c.varMap.get(varName).getType();
     }

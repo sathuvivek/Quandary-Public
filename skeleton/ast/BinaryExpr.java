@@ -61,10 +61,30 @@ public class BinaryExpr extends Expr {
     }
 
     @Override
+    boolean isList(Context c) {
+        if(expr2.isList(c))
+            return true;
+        return false;
+    }
+
+    @Override
     Type getStaticType(Context c) {
         if(operator != DOT) {
            return Type.INT;
         }
+        if(IsExtended.getValue()) {
+//            System.out.println("Binary : " + this.toString());
+//            System.out.println("isList : " + expr2.isList(c));
+            if(expr2.isList(c) || expr2 == null) {
+                if(expr1 != null)
+                    return Type.NONEMPTYLIST;
+                return Type.LIST;
+            }
+            if(expr2 != null && expr1 != null)
+                return Type.NONNILREF;
+
+        }
+
         return Type.REF;
     }
 }

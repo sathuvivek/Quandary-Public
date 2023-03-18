@@ -30,6 +30,12 @@ public class UnaryMinusExpr extends Expr {
         }
 
     }
+
+    @Override
+    boolean isList(Context c) {
+        return false;
+    }
+
     @Override
     Type getStaticType(Context c) {
         return Type.INT;

@@ -31,7 +31,7 @@ public class DeclStmt extends Stmt {
     @Override
     public void check(Context c) {
         expr.check(c);
-        Context.checkTypes(expr.getStaticType(c), varDecl.getType());
+        Context.checkTypes(expr.getStaticType(c), varDecl.getType(), loc);
         if(c.varMap.containsKey(varDecl.getName())) {
             Interpreter.fatalError("Duplicate variable", Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }

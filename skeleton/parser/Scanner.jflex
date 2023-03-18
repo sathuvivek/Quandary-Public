@@ -77,6 +77,9 @@ white_space = {new_line} | [ \t\f]
 "print"           { return symbol("print", PRINT);}
 "mutable"         { return symbol("mutable", MUTABLE);}
 "Ref"             { return symbol("Ref", REF);}
+"NonNilRef"       { return symbol("NonNilRef", NONNILREF);}
+"List"            { return symbol("List", LIST);}
+"NonEmptyList"    { return symbol("NonEmptyList", NONEMPTYLIST);}
 "while"           { return symbol("while", WHILE);}
 "nil"             { return symbol("nil", NIL);}
 "Q"               { return symbol("Q", Q);}

@@ -6,5 +6,7 @@ public abstract class Expr extends ASTNode {
         super(loc);
     }
 
+    abstract boolean isList(Context c);
+
     abstract Type getStaticType(Context c);
 }

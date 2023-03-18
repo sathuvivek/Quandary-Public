@@ -35,6 +35,11 @@ public class ExprList extends Expr {
     }
 
     @Override
+    boolean isList(Context c) {
+        return false;
+    }
+
+    @Override
     Type getStaticType(Context c) {
         return first.getStaticType(c);
     }

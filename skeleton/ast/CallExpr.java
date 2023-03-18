@@ -47,7 +47,7 @@ public class CallExpr extends Expr {
         FormalDeclList currParams = callee.getParams();
         ExprList currArgs = args;
         while(currParams != null && currArgs != null) {
-            Context.checkTypes(currArgs.getFirst().getStaticType(c), currParams.getVarDecl().getType());
+            Context.checkTypes(currArgs.getFirst().getStaticType(c), currParams.getVarDecl().getType(), loc);
             currParams = currParams.getRest();
             currArgs = currArgs.getRest();
         }
@@ -63,6 +63,9 @@ public class CallExpr extends Expr {
 
     static FuncDef getBuiltinFunc(String funcName) {
         FuncDef callee = null;
+        Type paramType = Type.REF;
+        if(IsExtended.getValue())
+            paramType = Type.NONNILREF;
         if(funcName.equals("isNil") || funcName.equals("isAtom")) {
             callee = new FuncDef(new VarDecl(Type.INT, false, null, null),
                     new FormalDeclList(new VarDecl(Type.Q, false, "NAME", null ), null, null),
@@ -70,7 +73,7 @@ public class CallExpr extends Expr {
                     null);
         } else if(funcName.equals("left") || funcName.equals("right")) {
             callee = new FuncDef(new VarDecl(Type.Q, false, null, null),
-                    new FormalDeclList(new VarDecl(Type.REF, false, "NAME", null ), null, null),
+                    new FormalDeclList(new VarDecl(paramType, false, "NAME", null ), null, null),
                     null,
                     null);
         } else if(funcName.equals("randomInt")) {
@@ -80,13 +83,38 @@ public class CallExpr extends Expr {
                     null);
         } else if(funcName.equals("setLeft") || funcName.equals("setRight")) {
             callee = new FuncDef(new VarDecl(Type.INT, true, null, null),
-                    new FormalDeclList(new VarDecl(Type.REF, false, "NAME", null ),
+                    new FormalDeclList(new VarDecl(paramType, false, "NAME", null ),
                             new FormalDeclList(new VarDecl(Type.Q, false, "y", null), null, null),
                             null),
                     null,
                     null);
         }
+
+        if(IsExtended.getValue()) {
+            if(funcName.equals("first")) {
+                callee = new FuncDef(new VarDecl(Type.Q, false, null, null),
+                        new FormalDeclList(new VarDecl(Type.NONEMPTYLIST, false, "NAME", null ), null, null),
+                        null,
+                        null);
+            } else if(funcName.equals("rest")) {
+                callee = new FuncDef(new VarDecl(Type.LIST, false, null, null),
+                        new FormalDeclList(new VarDecl(Type.NONEMPTYLIST, false, "NAME", null ), null, null),
+                        null,
+                        null);
+            }
+        }
         return callee;
+    }
+
+    @Override
+    boolean isList(Context c) {
+        FuncDef callee = c.funcMap.get(funcName);
+        if(callee == null) {
+            callee = getBuiltinFunc(funcName);
+        }
+        if(IsExtended.getValue() && (callee.getVarDecl().getType() == Type.LIST || callee.getVarDecl().getType() == Type.NONEMPTYLIST))
+            return true;
+        return false;
     }
 
     @Override

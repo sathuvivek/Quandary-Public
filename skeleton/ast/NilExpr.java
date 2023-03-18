@@ -12,7 +12,16 @@ public class NilExpr extends Expr {
     }
 
     @Override
+    boolean isList(Context c) {
+        if(IsExtended.getValue())
+            return true;
+        return false;
+    }
+
+    @Override
     Type getStaticType(Context c) {
+        if(IsExtended.getValue())
+            return Type.LIST;
         return Type.REF;
     }
 }

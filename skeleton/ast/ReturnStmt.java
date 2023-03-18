@@ -26,7 +26,7 @@ public class ReturnStmt extends Stmt {
     @Override
     public void check(Context c) {
         expr.check(c);
-        Context.checkTypes(expr.getStaticType(c), c.containingFuncDef.getVarDecl().getType());
+        Context.checkTypes(expr.getStaticType(c), c.containingFuncDef.getVarDecl().getType(), loc);
     }
 
 }
