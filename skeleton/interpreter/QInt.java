@@ -30,6 +30,9 @@ class QInt extends QVal{
         if(obj == this)
             return true;
        // System.out.println("QInt object didnt match");
+        if(obj == null && this == null) {
+            return true;
+        }
         if(obj instanceof QInt) {
             //System.out.println("QInt they are QInts");
             QInt obj1 = (QInt) obj;

@@ -36,6 +36,9 @@ class QRef extends QVal{
         if(obj == this)
             return true;
         System.out.println("QRef Not exact match");
+        if(obj == null && this == null) {
+            return true;
+        }
         if(obj instanceof QRef) {
             System.out.println("is an instance");
             QRef obj1 = (QRef) obj;

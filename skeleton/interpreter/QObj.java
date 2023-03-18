@@ -39,9 +39,15 @@ class QObj {
         if(obj == this)
             return true;
         System.out.println("Not Exact match for QObj");
+        if(obj == null && this == null) {
+            return true;
+        }
         if(obj instanceof QObj) {
             System.out.println("Is an QObj");
             QObj obj1 = (QObj)obj;
+            if(obj1.left == this.left && obj1.right == this.right) {
+                return true;
+            }
             if(obj1.left != null && obj1.right != null && this.left != null && this.right != null) {
                 if (obj1.left.equals(this.left) && obj1.right.equals(this.right)) {
                     System.out.println("is an exact match");
