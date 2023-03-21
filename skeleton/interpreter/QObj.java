@@ -35,28 +35,28 @@ class QObj {
 
     @Override
     public boolean equals(Object obj) {
-        System.out.println("Checking Equality for QObj");
+     //   System.out.println("Checking Equality for QObj");
         if(obj == this)
             return true;
-        System.out.println("Not Exact match for QObj");
+     //   System.out.println("Not Exact match for QObj");
         if(obj == null && this == null) {
             return true;
         }
         if(obj instanceof QObj) {
-            System.out.println("Is an QObj");
+       //     System.out.println("Is an QObj");
             QObj obj1 = (QObj)obj;
             if(obj1.left == this.left && obj1.right == this.right) {
                 return true;
             }
             if(obj1.left != null && obj1.right != null && this.left != null && this.right != null) {
                 if (obj1.left.equals(this.left) && obj1.right.equals(this.right)) {
-                    System.out.println("is an exact match");
+          //          System.out.println("is an exact match");
                     return true;
                 }
 
             }
         }
-        System.out.println("QObj not a match");
+    //    System.out.println("QObj not a match");
         return false;
     }
 }

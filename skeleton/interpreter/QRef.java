@@ -32,26 +32,26 @@ class QRef extends QVal{
 
     @Override
     public boolean equals(Object obj) {
-        System.out.println("QRef object equality check");
+    //    System.out.println("QRef object equality check");
         if(obj == this)
             return true;
-        System.out.println("QRef Not exact match");
+       // System.out.println("QRef Not exact match");
         if(obj == null && this == null) {
             return true;
         }
         if(obj instanceof QRef) {
-            System.out.println("is an instance");
+           // System.out.println("is an instance");
             QRef obj1 = (QRef) obj;
             if(obj1.referent == this.referent) {
-                System.out.println("Direct referent match");
+              //  System.out.println("Direct referent match");
                 return true;
             }
             if(obj1.referent.equals(this.referent)) {
-                System.out.println("referent equality match");
+               // System.out.println("referent equality match");
                 return true;
             }
         }
-        System.out.println("Not a Qref match");
+     //   System.out.println("Not a Qref match");
         return false;
     }
 }

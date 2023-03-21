@@ -305,8 +305,9 @@ public class Interpreter {
                if (cachedResult != null) {
                 //   System.out.println("Got cached result:  " + cachedResult.toString()  ); //+ cachedResult
                    return cachedResult;
-               } else
-                   System.out.println("No cache results ");
+               } else {
+                   //System.out.println("No cache results ");
+               }
            }
            QVal output =  execute(callee.getBody(), calleeEnv);
            if(hasMemoization && mapper.containsKey(funcName)) {

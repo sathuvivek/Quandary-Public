@@ -27,7 +27,7 @@ public class IdentExpr extends Expr {
     @Override
     public void check(Context c) {
         if(!c.varMap.containsKey(varName)) {
-            Interpreter.fatalError("Undeclared var", Interpreter.EXIT_STATIC_CHECKING_ERROR);
+            Interpreter.fatalError("Undeclared var " + loc, Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
     }
 

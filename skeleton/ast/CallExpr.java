@@ -39,7 +39,7 @@ public class CallExpr extends Expr {
             callee = getBuiltinFunc(funcName);
         }
         if(callee == null) {
-            Interpreter.fatalError("undef function", Interpreter.EXIT_STATIC_CHECKING_ERROR);
+            Interpreter.fatalError("undef function " + loc, Interpreter.EXIT_STATIC_CHECKING_ERROR);
         }
         if(args != null) {
             args.check(c);
