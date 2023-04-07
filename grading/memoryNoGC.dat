@@ -1,0 +1,16 @@
+0 isrefint.q   42    -gc MarkSweep -heapsize 1638400
+1 blarg.q        42  -gc NoGC      -heapsize 16384
+1 cycles2.q    1000  -gc NoGC      -heapsize 16384
+1 fibfree.q      22  -gc NoGC      -heapsize  1000
+1 randomList.q   10  -gc NoGC      -heapsize   240
+1 fibfree.q 21 -gc NoGC -heapsize 1000
+1 cycles2.q 2000 -gc NoGC -heapsize 16384
+1 randomList.q 20 -gc NoGC -heapsize 480
+1 insertionsort2.q 42 -gc NoGC -heapsize 1800
+1 cycles2.q 10 -gc NoGC -heapsize 104
+1 serialqsort.q 42 -gc NoGC -heapsize 12000
+1 serialbubblish.q 42 -gc NoGC -heapsize 4000
+1 fibfree.q 18 -gc NoGC -heapsize 80
+1 fibfree.q 18 -gc NoGC -heapsize 800000
+1 append4.q    42    -gc NoGC  -heapsize 2000
+0 isrefint.q 42

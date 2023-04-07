@@ -10,8 +10,11 @@ Ref addR(Ref list, int elem) {
   if (isNil(list) != 0) {
     return elem . nil;
   }
+  print(list);
   Q left = left(list);
   Ref right = (Ref)right(list);
+  print(left);
+  print(right);
   free list;
   return left . addR(right, elem);
 }

@@ -27,6 +27,8 @@ public class Interpreter {
     public static final int EXIT_DATA_RACE_ERROR = 6;
     public static final int EXIT_NONDETERMINISM_ERROR = 7;
 
+   // public static List<Long> tempRoots = new ArrayList<Long>();
+
     static private Interpreter interpreter;
 
     static private WeakHashMap<String, WeakHashMap> mapper = new WeakHashMap<>();
@@ -35,6 +37,8 @@ public class Interpreter {
     public static Interpreter getInterpreter() {
         return interpreter;
     }
+
+    public static MemoryManager memoryManager;
 
     public static void main(String[] args) {
         String gcType = "NoGC"; // default for skeleton, which only supports NoGC
@@ -99,9 +103,19 @@ public class Interpreter {
         }
      //   astRoot.println(System.out);
         astRoot.check(Context.newContext());
+        memoryManager = MemoryManager.getInstance(heapBytes, gcType);
+        memoryManager.setGC();
         interpreter = new Interpreter(astRoot);
-        interpreter.initMemoryManager(gcType, heapBytes);
-        String returnValueAsString = interpreter.executeRoot(astRoot, quandaryArg).toString();
+       // interpreter.initMemoryManager(gcType, heapBytes);
+        QVal returnVal = interpreter.executeRoot(astRoot, quandaryArg);
+//        System.out.println("Program has returned something");
+//        System.out.println("Return is int? : " + (returnVal instanceof QInt));
+//        System.out.println("Return is Ref? : " + (returnVal instanceof QRef));
+//        if(returnVal instanceof QRef) {
+////            System.out.println("Addr of return value : " + ((QRef)returnVal).getAddress());
+////            memoryManager.printFullBlock(((QRef)returnVal).getAddress());
+//        }
+        String returnValueAsString = returnVal.toString();
         System.out.println("Interpreter returned " + returnValueAsString);
     }
 
@@ -129,6 +143,7 @@ public class Interpreter {
         FuncDef mainFuncDef = astRoot.getFuncDefList().lookupFuncDef("main");
         HashMap<String, QVal> mainEnv = new HashMap<String, QVal>();
         mainEnv.put(mainFuncDef.getParams().getVarDecl().getName(), new QInt(arg));
+
         return execute(mainFuncDef.getBody(), mainEnv);
     }
 
@@ -179,7 +194,33 @@ public class Interpreter {
         } else if(stmt instanceof CompoundStmt) {
             CompoundStmt compoundStmt = (CompoundStmt) stmt;
             return execute(compoundStmt.getStmtList(), env);
-        } else {
+        }
+        else if(stmt instanceof FreeStmt) {
+            FreeStmt freeStmt = (FreeStmt) stmt;
+            QVal val = evaluate(freeStmt.getExpr(), env);
+//            System.out.println("Free stmt with expr with val :  " + val ) ;
+//            System.out.println("FreeList start : " + memoryManager.freeListPointer);
+            if(val instanceof QRef) {
+                long addr = ((QRef) val).getAddress();
+                if((addr != -1 ) && addr != Long.MIN_VALUE) {
+//                        System.out.println("Freeing called for : " + addr + " | at " + freeStmt.getLoc().toString());
+//                    System.out.println("Pointer before free " + memoryManager.freeListPointer);
+//                    memoryManager.printBlock(memoryManager.freeListPointer);
+//                    System.out.println("Freelist before: ");
+//                    memoryManager.printFreeList();
+                    memoryManager.freeRoot(env, ((QRef) val).getAddress());
+//                    System.out.println("Freelist after: ");
+//                    memoryManager.printFreeList();
+//                    System.out.println("Pointer after free " + memoryManager.freeListPointer);
+//                    memoryManager.printBlock(memoryManager.freeListPointer);
+                }
+            }
+ //           System.out.println("FreeList at end : " + memoryManager.freeListPointer);
+
+
+            return null;
+        }
+        else {
             throw new RuntimeException("Unhandled Smt time");
         }
     }
@@ -189,7 +230,8 @@ public class Interpreter {
             if(IsExtended.getValue())
                 return new QList(null);
             else
-                return new QRef(null);
+                return new QRef(Long.MIN_VALUE);
+               // return new QRef(0L);
         } else if (expr instanceof ConstExpr) {
             return new QInt((long)((ConstExpr) expr).getValue());
         } else if(expr instanceof IdentExpr) {
@@ -203,6 +245,11 @@ public class Interpreter {
             QVal value = evaluate(castExpr.getExpr(), env);
             if(castExpr.getType() == Type.REF && ! (value instanceof QRef) ||
                 castExpr.getType() == Type.INT && ! (value instanceof QInt))   {
+//                System.out.println(castExpr.toString());
+//                System.out.println(" castExpr type : " + castExpr.getType());
+//                System.out.println(" castExpr value : " + value);
+//                System.out.println("Expr inside cast Expr : " + castExpr.getExpr().toString());
+//                System.out.println("Error at : " + castExpr.getLoc());
                 Interpreter.fatalError("Failed dynamic typecast traditional", Interpreter.EXIT_DYNAMIC_TYPE_ERROR);
             }
             if(IsExtended.getValue()) {
@@ -233,32 +280,45 @@ public class Interpreter {
             } else if(callExpr.getFuncName().equals("left")) {
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 checkRef(r);
-                return r.referent.left;
+                long address = r.getAddress();
+                if(address == -1 || address == Long.MIN_VALUE)
+                    return new QRef(-1);
+                return memoryManager.getLeft(address);
+               // return r.referent.left;
             } else if (callExpr.getFuncName().equals("right")) {
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 checkRef(r);
-                return r.referent.right;
+                long address = r.getAddress();
+                if(address == -1 || address == Long.MIN_VALUE)
+                    return new QRef(-1);
+                return memoryManager.getRight(address);
+                // return r.referent.right;
             } else if (callExpr.getFuncName().equals("setLeft")) {
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 QVal val = evaluate(callExpr.getArgs().getRest().getFirst(), env);
                 checkRef(r);
-                r.referent.left = val;
+                long address = r.getAddress();
+                memoryManager.setLeft(address, val);
+               // r.referent.left = val;
                 return new QInt(1);
             } else if (callExpr.getFuncName().equals("setRight")) {
                 QRef r = (QRef) evaluate(callExpr.getArgs().getFirst(), env);
                 QVal val = evaluate(callExpr.getArgs().getRest().getFirst(), env);
                 checkRef(r);
-                r.referent.right = val;
+                long address = r.getAddress();
+                memoryManager.setRight(address, val);
+               // r.referent.right = val;
                 return new QInt(1);
             } else if (callExpr.getFuncName().equals("isAtom")) {
                 QVal r =  evaluate(callExpr.getArgs().getFirst(), env);
-                if(r instanceof QInt || (r instanceof QRef && ((QRef)r).referent == null)) {
+                if(r instanceof QInt || (r instanceof QRef && ((((QRef)r).getAddress() == Long.MIN_VALUE) || (((QRef)r).getAddress() == -1)))) { //((QRef)r).referent == null)
                     return new QInt(1);
                 }
                 return new QInt(0);
             } else if (callExpr.getFuncName().equals("isNil")) {
                 QVal r = evaluate(callExpr.getArgs().getFirst(), env);
-                if(r instanceof QRef && ((QRef)r).referent == null) {
+
+                if(r instanceof QRef && ((((QRef)r).getAddress() == Long.MIN_VALUE) || (((QRef)r).getAddress() == -1))) { //((QRef)r).referent == null
                     return new QInt(1);
                 }
                 return new QInt(0);
@@ -285,12 +345,24 @@ public class Interpreter {
            FormalDeclList currentFormalDeclList = callee.getParams();
            ExprList currentExprList = callExpr.getArgs();
            CustomArrayList<QVal> argumentList = new CustomArrayList<>();
+           List<Long> tempFuncRoots = new ArrayList<Long>();
            while(currentFormalDeclList != null) {
                QVal exprVal = evaluate(currentExprList.getFirst(),env);
                argumentList.add(exprVal);
+               if(exprVal instanceof QRef) {
+                   long tempAddress = ((QRef)exprVal).getAddress();
+                   if(tempAddress != -1 && tempAddress != Long.MIN_VALUE) {
+//                       System.out.println("Putting memory as temp key in env : " + tempAddress);
+                       env.put(Long.toString(tempAddress), exprVal);
+                       tempFuncRoots.add(tempAddress);
+                   }
+               }
                calleeEnv.put(currentFormalDeclList.getVarDecl().getName(), exprVal);
                currentFormalDeclList = currentFormalDeclList.getRest();
                currentExprList = currentExprList.getRest();
+           }
+           for(Long root : tempFuncRoots) {
+               env.remove(Long.toString(root));
            }
            String funcName = callExpr.getFuncName();
            if(hasMemoization && mapper.containsKey(funcName)) {
@@ -309,7 +381,17 @@ public class Interpreter {
                    //System.out.println("No cache results ");
                }
            }
+
+//           if(funcName.equals("fibMemHog"))
+//                System.out.println("Calling function : " + funcName + " | with arg : " + argumentList.toString());
+            GCRoots.prepRoots(env);
            QVal output =  execute(callee.getBody(), calleeEnv);
+            GCRoots.unPrepRoots(env);
+//           if(tempRootsDup.size() > 0) {
+//
+////               System.out.println("calling remove temp roots for the scope : " + tempRootsDup.toString());
+//               memoryManager.removeTempRoots(tempRootsDup);
+//           }
            if(hasMemoization && mapper.containsKey(funcName)) {
                WeakHashMap<CustomArrayList<QVal>, QVal> memTable = mapper.get(funcName);
                memTable.put(argumentList, output);
@@ -326,12 +408,75 @@ public class Interpreter {
                 case BinaryExpr.MINUS: return new QInt(((QInt)evaluate(binaryExpr.getLeftExpr(), env)).value - ((QInt)evaluate(binaryExpr.getRightExpr(), env)).value);
                 case BinaryExpr.TIMES: return new QInt(((QInt)evaluate(binaryExpr.getLeftExpr(), env)).value * ((QInt)evaluate(binaryExpr.getRightExpr(), env)).value);
                 case BinaryExpr.DOT:
+
+
+
+//                    GCRoots.push(rootAddress);
+
+//                    System.out.println("Adding to remove : " + rootAddress);
+//                    System.out.println("Binary expression allocated at  : " + rootAddress  ); //+  " for expr : "  + binaryExpr.toString()
+//                    System.out.println("evaluating left for : ");
+//                    System.out.println("LEFT : " + binaryExpr.getLeftExpr().toString());
                     QVal left = evaluate(binaryExpr.getLeftExpr(), env);
+
+//                    System.out.println(" left val : " + left.toString() + " | at : " + binaryExpr.getLoc().toString());
+                    if(left instanceof QRef) {
+                        long leftTempAddress = ((QRef)left).getAddress();
+                        if(leftTempAddress != -1 && leftTempAddress != Long.MIN_VALUE) {
+//                            System.out.println("Putting memory as key in env left : " + leftTempAddress);
+                            env.put(Long.toString(leftTempAddress), left);
+                        }
+                    }
+//                    GCRoots.pop(rootAddress);
+//                    GCRoots.push(rootAddress);
+
+//                    System.out.println("evaluating right for " + rootAddress);
+//                   System.out.println("RIGHT : " + binaryExpr.getRightExpr().toString());
                     QVal right = evaluate(binaryExpr.getRightExpr(), env);
+
+//                    System.out.println(" right val : " + right.toString() + " | at : " + binaryExpr.getLoc().toString());
+                    if(right instanceof QRef) {
+                        long rightTempAddress = ((QRef)right).getAddress();
+                        if(rightTempAddress != -1 && rightTempAddress != Long.MIN_VALUE) {
+//                            System.out.println("Putting memory as key in env right : " + rightTempAddress);
+                            env.put(Long.toString(rightTempAddress), right);
+                        }
+                    }
+//                    System.out.println("for " + rootAddress + " right val : " + right.toString());
+
+//                    memoryManager.printBlock(rootAddress);
+//                    if(left instanceof QRef) {
+//                        GCRoots.pop(((QRef)left).getAddress());
+//                    }
+//                    GCRoots.pop(rootAddress);
+                    long rootAddress = memoryManager.allocate(env);
+//                    System.out.println("Allocate called for : " + rootAddress + " | at : " + binaryExpr.getLoc().toString());
+                    memoryManager.setRight(rootAddress, right);
+                    memoryManager.setLeft(rootAddress, left);
+
+                    if(left instanceof QRef) {
+                        long leftTempAddress = ((QRef)left).getAddress();
+                        if(leftTempAddress != -1 && leftTempAddress != Long.MIN_VALUE) {
+//                            System.out.println("Removing memory as key in left : " + leftTempAddress);
+                            env.remove(Long.toString(leftTempAddress));
+                        }
+                    }
+                    if(right instanceof QRef) {
+                        long rightTempAddress = ((QRef)right).getAddress();
+                        if(rightTempAddress != -1 && rightTempAddress != Long.MIN_VALUE) {
+//                            System.out.println("Removing memory as key in right : " + rightTempAddress);
+                            env.remove(Long.toString(rightTempAddress));
+                        }
+                    }
+                   // tempRoots.add(rootAddress);
                     if(right instanceof QList) {
                         return new QList( new QObj(left, right));
-                    } else
-                        return new QRef(new QObj(left, right));
+                    } else {
+                        QVal returnVal = new QRef(rootAddress);
+                        //GCRoots.push(rootAddress);
+                       // env.put(Long.toString(rootAddress), returnVal);
+                        return returnVal;
+                    }
                 default: throw new RuntimeException("Unhandled operator");
             }
         }
@@ -351,9 +496,12 @@ public class Interpreter {
     }
 
     void checkRef(QRef value) {
-        if(value.referent == null && !IsExtended.getValue()) {
+        if(value.getAddress() == 0) {
             Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
         }
+//        if(value.referent == null && !IsExtended.getValue()) {
+//            Interpreter.fatalError("Nil dereference", Interpreter.EXIT_NIL_REF_ERROR);
+//        }
     }
 
     boolean evaluate(Cond cond, HashMap<String,QVal> env) {

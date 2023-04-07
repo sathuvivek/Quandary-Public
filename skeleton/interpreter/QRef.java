@@ -1,22 +1,46 @@
 package interpreter;
 
+import java.util.Objects;
+
 class QRef extends QVal{
     final QObj referent;
     private int alreadyHashed;
+
+    public long getAddress() {
+        return address;
+    }
+
+    public void setAddress(long address) {
+        this.address = address;
+    }
+
+    private long address;
     QRef(QObj Referent) {
         this.referent = Referent;
+    }
+
+    QRef(long address) {
+        this.address = address;
+        this.referent = null;
     }
 
     boolean isNonNil() {
         return !(referent == null);
     }
 
+
+
+
     @Override
     public String toString() {
-        if(referent == null) {
+//        if(referent == null) {
+//            return "nil";
+//        }
+        if((address == -1) || (address == Long.MIN_VALUE) || (address == 0L)) {
             return "nil";
         }
-        return referent.toString();
+        MemoryManager manager = MemoryManager.getInstance();
+        return manager.getStr(address);
     }
 
     @Override
@@ -25,7 +49,10 @@ class QRef extends QVal{
             return alreadyHashed;
         }
         int result = 17;
-        result = 31 * result + (referent == null ? 0 : referent.hashCode());
+        if(referent != null)
+            result = 31 * result + (referent == null ? 0 : referent.hashCode());
+        if(address != 0)
+            result += Objects.hash(address);
         alreadyHashed = result;
         return result;
     }

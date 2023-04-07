@@ -28,7 +28,7 @@ parser code {:
 :};
 
 terminal PLUS, MINUS, TIMES, UMINUS, LPAREN, RPAREN, RETURN, SEMICOLON, INT, LCURLY, RCURLY, ASSIGN, IF, ELSE, PRINT,
-         GE, LE, GT, LT, EQ, NE, AND, OR, NOT, COMMA, NIL, MUTABLE, DOT, REF, Q, WHILE, NONNILREF, LIST, NONEMPTYLIST ;
+         GE, LE, GT, LT, EQ, NE, AND, OR, NOT, COMMA, NIL, MUTABLE, DOT, REF, Q, WHILE, NONNILREF, LIST, NONEMPTYLIST, FREE ;
 terminal Long INTCONST;
 terminal String IDENT;
 
@@ -129,6 +129,8 @@ stmt ::= varDecl:var ASSIGN expr :e SEMICOLON
             {:  RESULT = new ReturnStmt(e, loc(eleft, eright)); :}
       | LCURLY stmtList:body RCURLY
             {:  RESULT = new CompoundStmt(body, loc(bodyleft, bodyright)); :}
+      | FREE expr:e SEMICOLON
+            {: RESULT = new FreeStmt(e, loc(eleft, eright)); :}
       ;
 
 exprList ::= neExprList:list

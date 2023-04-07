@@ -12,5 +12,9 @@ public abstract class ASTNode {
         this.loc = loc;
     }
 
+    public Location getLoc() {
+        return loc;
+    }
+
     public abstract void check(Context c);
 }

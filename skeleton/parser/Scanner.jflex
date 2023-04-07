@@ -94,6 +94,7 @@ white_space = {new_line} | [ \t\f]
 "!"               { return symbol("!", NOT); }
 "return"          { return symbol("return", RETURN);}
 ","               { return symbol(",", COMMA); }
+"free"            { return symbol("free", FREE); }
 
 
 
