@@ -9,7 +9,6 @@ public class ExplicitGC implements GarbageCollector{
     RawMemory memory;
 
     public ExplicitGC() {
-//        System.out.println("Explicit GC has initialized");
         manager = MemoryManager.getInstance();
         memory = manager.getMemory();
 
@@ -21,12 +20,7 @@ public class ExplicitGC implements GarbageCollector{
 
     @Override
     public void freeRoot(Map<String,QVal> env, long addr) {
-//       System.out.println("Freeing of address called : " + addr );
 
-//       manager.printBlock(addr);
-//        manager.printFreeList();
-     //  manager.printFreeList();
- //       System.out.println("Freelist addr : " + manager.freeListPointer);
         RawMemory memory = manager.getMemory();
         long headerAddr = addr;
         long leftAddr = addr + RawMemory.BYTES_IN_WORD;
@@ -47,10 +41,6 @@ public class ExplicitGC implements GarbageCollector{
         manager.freeListPointer = headerAddr;
         long leftVal = memory.load(leftAddr);
         long rightVal = memory.load(rightAddr);
-//
-//        System.out.println("header of  freeList : " + dupHeader);
-//        System.out.println("left of  freeList : " + valToStore);
-//        System.out.println("right of  freeList : " + Long.MIN_VALUE);
         memory.store(leftAddr, valToStore);
         memory.store(rightAddr, Long.MIN_VALUE);
         memory.store(headerAddr, dupHeader);
@@ -71,7 +61,6 @@ public class ExplicitGC implements GarbageCollector{
                     freeRoot(env, rightVal);
             }
         }
-//        System.out.println("Freelist after freeing");
-//        manager.printFreeList();
+
     }
 }
